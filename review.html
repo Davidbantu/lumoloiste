@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Review – LUMO LOISTE</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Exo+2:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Exo 2',sans-serif;background:#07090D;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.card{background:linear-gradient(135deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03));border:1px solid rgba(255,255,255,0.1);border-radius:20px;max-width:480px;width:100%;padding:0;overflow:hidden;}
+.hdr{background:linear-gradient(135deg,rgba(39,215,255,0.15),rgba(39,215,255,0.05));padding:24px 24px 18px;border-bottom:1px solid rgba(39,215,255,0.15);}
+.logo-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.logo-row img{width:40px;height:40px;object-fit:contain;border-radius:10px;}
+.brand{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;color:#27D7FF;}
+.res-info{background:rgba(0,0,0,0.2);border-radius:12px;padding:12px 14px;display:grid;gap:6px;}
+.ri-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;}
+.ri-label{color:rgba(255,255,255,0.4);}
+.ri-val{color:#fff;font-weight:600;}
+.ri-time{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:800;color:#27D7FF;}
+.body{padding:24px;}
+.section-label{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:12px;}
+.star-row{display:flex;gap:10px;justify-content:center;margin-bottom:24px;}
+.star-btn{font-size:42px;cursor:pointer;color:rgba(255,255,255,0.15);transition:color 0.15s,transform 0.15s;user-select:none;}
+.star-btn.active{color:#FACC15;transform:scale(1.1);}
+.q-block{margin-bottom:20px;}
+.q-text{font-size:13px;font-weight:600;color:rgba(255,255,255,0.85);margin-bottom:8px;}
+.opts{display:grid;gap:6px;}
+.opt{padding:10px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;cursor:pointer;font-size:12px;color:rgba(255,255,255,0.6);transition:all 0.2s;background:rgba(255,255,255,0.03);}
+.opt:hover{border-color:rgba(39,215,255,0.4);background:rgba(39,215,255,0.05);}
+.opt.sel{border-color:#27D7FF;background:rgba(39,215,255,0.1);color:#fff;}
+textarea{width:100%;background:#0B0F14;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 14px;color:#fff;font-family:'Exo 2',sans-serif;font-size:13px;resize:none;outline:none;transition:border 0.2s;}
+textarea:focus{border-color:#27D7FF;}
+.btn-submit{width:100%;background:linear-gradient(135deg,#27D7FF,#18BFE6);color:#000;font-family:'Orbitron',sans-serif;font-weight:700;letter-spacing:2px;padding:14px;border:none;border-radius:10px;cursor:pointer;margin-top:16px;font-size:13px;transition:all 0.2s;}
+.btn-submit:hover{transform:scale(1.02);box-shadow:0 0 20px rgba(39,215,255,0.4);}
+.btn-skip{width:100%;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px;cursor:pointer;margin-top:8px;font-size:12px;transition:all 0.2s;}
+.btn-skip:hover{background:rgba(255,255,255,0.1);}
+.thanks{text-align:center;padding:40px 24px;}
+.thanks-icon{font-size:60px;margin-bottom:16px;}
+.thanks h2{font-family:'Orbitron',sans-serif;font-size:1.2rem;font-weight:800;color:#27D7FF;margin-bottom:8px;}
+.thanks p{font-size:13px;color:rgba(255,255,255,0.5);}
+.error-state{text-align:center;padding:40px 24px;}
+.error-state h2{font-family:'Orbitron',sans-serif;font-size:1rem;color:#EF4444;margin-bottom:8px;}
+.error-state p{font-size:13px;color:rgba(255,255,255,0.4);}
+.prog-bar{height:2px;background:rgba(255,255,255,0.08);position:relative;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,#27D7FF,#18BFE6);transition:width 0.4s ease;}
+.step-dots{display:flex;justify-content:center;gap:6px;padding:12px;}
+.step-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.15);}
+.step-dot.active{background:#27D7FF;width:18px;border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="card" id="app">
+  <div style="padding:40px;text-align:center;">
+    <div style="font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.3);">Loading...</div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCirYQ_46JiSkMIwCNs1nSi89dvB1MUg_A",
+  authDomain: "deliverylog12.firebaseapp.com",
+  databaseURL: "https://deliverylog12-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "deliverylog12",
+  storageBucket: "deliverylog12.firebasestorage.app",
+  messagingSenderId: "19081371357",
+  appId: "1:19081371357:web:b9b59e732a4d90d4d44534",
+  measurementId: "G-FSZXXZQSL0"
+};
+let db = null;
+try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); } catch(e) { console.warn(e); }
+
+const params = new URLSearchParams(window.location.search);
+const rid = params.get('rid');
+const tok = params.get('tok');
+
+let reservation = null;
+let questions = [];
+let state = { step: 0, stars: 0, answers: {}, text: '' };
+
+async function init() {
+  if (!rid || !tok) { showError('Invalid review link.'); return; }
+  try {
+    if (db) {
+      const doc = await db.collection('reservations').doc(rid).get();
+      if (doc.exists) {
+        reservation = { id: rid, ...doc.data() };
+      }
+    }
+    if (!reservation) {
+      const local = JSON.parse(localStorage.getItem('ll-reservations') || '[]');
+      reservation = local.find(r => r.id === rid);
+    }
+    if (!reservation) { showError('Reservation not found.'); return; }
+    if (reservation.reviewToken !== tok) { showError('Invalid or expired review link.'); return; }
+    if (reservation.reviewed) { showAlreadyReviewed(); return; }
+    const qs = localStorage.getItem('ll-questions');
+    if (qs) { try { questions = JSON.parse(qs); } catch(e) {} }
+    if (!questions.length) questions = [
+      {id:'q1',text:'How satisfied were you with the service?',options:['Very satisfied','Satisfied','Neutral','Unsatisfied']},
+      {id:'q2',text:'Would you recommend us?',options:['Definitely','Probably','Probably not','No']},
+      {id:'q3',text:'How was the time efficiency?',options:['Excellent','Good','Average','Poor']}
+    ];
+    renderStep();
+  } catch(e) { console.error(e); showError('Error loading review. Please try again.'); }
+}
+
+function showError(msg) {
+  document.getElementById('app').innerHTML = `<div class="error-state"><div style="font-size:48px;margin-bottom:16px;">&#x1F512;</div><h2>Oops!</h2><p>${msg}</p></div>`;
+}
+function showAlreadyReviewed() {
+  document.getElementById('app').innerHTML = `<div class="error-state"><div style="font-size:48px;margin-bottom:16px;">&#x2714;&#xFE0F;</div><h2 style="color:#22C55E;">Already Reviewed</h2><p>You have already submitted a review for this reservation. Thank you!</p></div>`;
+}
+
+function totalSteps() { return 1 + questions.length + 1; } // stars + questions + text
+
+function renderStep() {
+  const total = totalSteps();
+  const prog = Math.round(((state.step) / total) * 100);
+  const logo = localStorage.getItem('ll-logo');
+  const settings = JSON.parse(localStorage.getItem('ll-settings') || '{}');
+  const bizName = settings.name || 'LUMO LOISTE';
+  const dateStr = reservation.date ? new Date(reservation.date).toLocaleDateString('fi-FI') : '';
+  const logoHtml = logo ? `<img src="${logo}">` : `<svg width="40" height="40" viewBox="0 0 24 24" fill="#27D7FF"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>`;
+  const dotsHtml = Array.from({length:total+1},(_,i) => `<div class="step-dot${i===state.step?' active':''}"></div>`).join('');
+  let bodyHtml = '';
+
+  if (state.step === 0) {
+    const starHtml = Array.from({length:5},(_,i) => `<span class="star-btn${i<state.stars?' active':''}" onclick="setStars(${i+1})">&#9733;</span>`).join('');
+    bodyHtml = `<p class="section-label">Overall Rating</p>
+      <div class="star-row">${starHtml}</div>
+      <div style="text-align:center;font-size:12px;color:rgba(255,255,255,0.3);margin-top:-12px;">${state.stars > 0 ? ['','Poor','Fair','Good','Great','Excellent'][state.stars] : 'Tap to rate'}</div>
+      <div style="margin-top:24px;display:flex;gap:8px;">
+        <button class="btn-submit" onclick="nextStep()" style="${state.stars===0?'opacity:0.5;':''}">NEXT</button>
+      </div>`;
+  } else if (state.step >= 1 && state.step <= questions.length) {
+    const q = questions[state.step - 1];
+    const sel = state.answers[q.id];
+    bodyHtml = `<div class="q-block"><p class="q-text">${q.text}</p><div class="opts">${q.options.map(o => `<div class="opt${sel===o?' sel':''}" onclick="selectOpt('${q.id}','${o.replace(/'/g,"\\'")}')">${o}</div>`).join('')}</div></div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn-skip" onclick="prevStep()">&#8592; Back</button>
+        <button class="btn-submit" onclick="nextStep()">NEXT</button>
+      </div>`;
+  } else {
+    bodyHtml = `<p class="section-label">Write a Review <span style="color:rgba(255,255,255,0.2);">(optional)</span></p>
+      <textarea rows="5" placeholder="Share your experience in your own words..." id="rev-text" oninput="state.text=this.value">${state.text}</textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn-skip" onclick="prevStep()">&#8592; Back</button>
+        <button class="btn-skip" onclick="submitReview()">Skip &amp; Submit</button>
+        <button class="btn-submit" onclick="submitReview()">SUBMIT</button>
+      </div>`;
+  }
+
+  document.getElementById('app').innerHTML = `
+    <div class="hdr">
+      <div class="logo-row">${logoHtml}<span class="brand">${bizName}</span></div>
+      <div class="res-info">
+        <div class="ri-row"><span class="ri-label">Customer</span><span class="ri-val">${reservation.name||''}</span></div>
+        <div class="ri-row"><span class="ri-label">Order</span><span class="ri-val">${reservation.orderNum||''}</span></div>
+        <div class="ri-row"><span class="ri-label">Date</span><span class="ri-val">${dateStr}</span></div>
+        <div class="ri-row"><span class="ri-label">Time</span><span class="ri-time">${reservation.time||''}</span></div>
+      </div>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${prog}%"></div></div>
+    <div class="step-dots">${dotsHtml}</div>
+    <div class="body">${bodyHtml}</div>`;
+}
+
+function setStars(n) { state.stars = n; renderStep(); }
+function selectOpt(qid, val) { state.answers[qid] = val; renderStep(); }
+function nextStep() {
+  if (state.step === 0 && state.stars === 0) { alert('Please select a star rating'); return; }
+  if (state.step < totalSteps()) { state.step++; renderStep(); }
+}
+function prevStep() { if (state.step > 0) { state.step--; renderStep(); } }
+
+async function submitReview() {
+  const reviewData = { stars: state.stars, answers: state.answers, text: state.text, timestamp: new Date().toISOString(), reservationId: rid, orderNum: reservation.orderNum, customerName: reservation.name };
+  try {
+    if (db) {
+      await db.collection('reviews').add(reviewData);
+      await db.collection('reservations').doc(rid).update({ reviewed: true, review: reviewData });
+    }
+    const local = JSON.parse(localStorage.getItem('ll-reservations') || '[]');
+    const idx = local.findIndex(r => r.id === rid);
+    if (idx > -1) { local[idx].reviewed = true; local[idx].review = reviewData; localStorage.setItem('ll-reservations', JSON.stringify(local)); }
+    showThanks();
+  } catch(e) { console.error(e); showThanks(); }
+}
+
+function showThanks() {
+  const stars = Array.from({length:5},(_,i)=>`<span style="font-size:28px;color:${i<state.stars?'#FACC15':'rgba(255,255,255,0.15)'}">&#9733;</span>`).join('');
+  document.getElementById('app').innerHTML = `<div class="thanks"><div class="thanks-icon">&#127775;</div><h2>THANK YOU!</h2><p style="margin-bottom:16px;">Your review has been saved.</p><div style="margin:16px 0;">${stars}</div><p>${state.stars > 0 ? ['','Poor','Fair','Good','Great','Excellent'][state.stars] + ' experience' : ''}</p></div>`;
+}
+
+init();
+</script>
+</body>
+</html>
